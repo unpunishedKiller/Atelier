@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
+from sqlalchemy.sql.functions import user
 
 from website import db
 from website.models import User
@@ -9,8 +10,21 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template("login.html", boolean = True)
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
 
+        user = User.query.filter_by(email=email).first()
+        if user:
+            if check_password_hash(user.password, password):
+                flash('Logged in successfully.', category='success')
+            else:
+                flash('Incorrect password.', category='error')
+
+        else:
+            flash('Email or password is incorrect.', category='error')
+
+    return render_template("login.html", boolean=True)
 @auth.route('/logout')
 def logout():
     return "<p>Logout</p>"
@@ -23,7 +37,10 @@ def sign_up():
         password1 = request.form.get('password1')
         password2 = request.form.get('password2')
 
-        if len(email) < 4:
+        user = User.query.filter_by(email=email).first() is not None
+        if user:
+            flash('Email already registered.', category='error')
+        elif len(email) < 4:
             flash('Email must be at least 4 characters long.', category='error')
         elif len(first_name) < 2:
             flash('First name must be at least 2 characters long.', category='error')
