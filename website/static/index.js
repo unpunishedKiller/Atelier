@@ -8,21 +8,16 @@ function deleteNote(noteId) {
 }
 
 function like(sketchId) {
-    const likeIcon = document.getElementById(`like-icon-${sketchId}`); // Backticks!
-    const likeCount = document.getElementById(`likes-count-${sketchId}`); // Backticks!
-
     fetch(`/like-sketch/${sketchId}`, { method: "POST" })
         .then((res) => res.json())
         .then((data) => {
-            likeCount.innerHTML = data["likes"];
-            // Toggle classes
-            if (data["liked"] === true) {
-                likeIcon.classList.remove("far");
-                likeIcon.classList.add("fas");
-            } else {
-                likeIcon.classList.remove("fas");
-                likeIcon.classList.add("far");
-            }
+            // Update all heart icons and counts for this sketch (overlay + mobile row)
+            document.querySelectorAll(`[data-like-icon="${sketchId}"]`).forEach(el => {
+                el.classList.toggle("is-liked", data["liked"]);
+            });
+            document.querySelectorAll(`[data-likes-count="${sketchId}"]`).forEach(el => {
+                el.innerHTML = data["likes"];
+            });
         });
 }
 
