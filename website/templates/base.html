@@ -1,98 +1,239 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}" />
+
+    <!-- Bootstrap 4 grid + utilities (content pages still rely on these) -->
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
       integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
       crossorigin="anonymous"
     />
+
+    <!-- Font Awesome 5 only (removed duplicate 4.7 load) -->
     <link
       rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-      crossorigin="anonymous"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
     />
 
-    <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    />
+    <title>{% block title %}Atelier{% endblock %}</title>
 
-    <title>{% block title %}Home{% endblock %}</title>
+    <style>
+      /* ---- Nav shell ---------------------------------------- */
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        background-color: var(--color-bg);
+        border-bottom: 1px solid var(--color-muted);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 80px;
+      }
+
+      .site-nav__col {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex: 1;
+      }
+
+      .site-nav__col--right {
+        justify-content: flex-end;
+      }
+
+      .site-nav__col--center {
+        flex: 0 0 auto;
+        justify-content: center;
+      }
+
+      /* Logo */
+      .site-nav__logo {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;
+        font-weight: var(--weight-light);
+        letter-spacing: var(--tracking-widest);
+        text-transform: uppercase;
+        color: var(--color-text);
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .site-nav__logo:hover {
+        color: var(--color-text);
+        text-decoration: none;
+      }
+
+      /* Nav links */
+      .nav-item-link {
+        font-family: var(--font-sans);
+        font-size: 0.6875rem;       /* 11px */
+        font-weight: var(--weight-normal);
+        letter-spacing: var(--tracking-wide);
+        text-transform: uppercase;
+        color: var(--color-text);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        white-space: nowrap;
+        transition: color var(--transition-base);
+      }
+
+      .nav-item-link:hover {
+        color: var(--color-muted);
+        text-decoration: none;
+      }
+
+      /* Inline SVG hamburger */
+      .nav-item-link svg {
+        width: 13px;
+        height: 13px;
+        flex-shrink: 0;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+      }
+
+      /* ---- Flash messages ----------------------------------- */
+      .flash-zone {
+        padding: 0 80px;
+      }
+
+      .flash-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--color-muted);
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        color: var(--color-text);
+      }
+
+      .flash-item--error {
+        color: var(--color-muted);
+      }
+
+      .flash-item__close {
+        cursor: pointer;
+        color: var(--color-muted);
+        font-size: 1rem;
+        line-height: 1;
+        flex-shrink: 0;
+        margin-left: 1rem;
+      }
+
+      /* ---- Page content wrapper ----------------------------- */
+      .page-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 72px 80px 100px;
+      }
+
+      /* ---- Responsive --------------------------------------- */
+      @media (max-width: 900px) {
+        .site-nav {
+          padding: 0 32px;
+        }
+        .flash-zone {
+          padding: 0 32px;
+        }
+        .page-content {
+          padding: 48px 32px 80px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .site-nav {
+          padding: 0 20px;
+          gap: 1rem;
+        }
+        .site-nav__col {
+          gap: 1rem;
+        }
+        .flash-zone {
+          padding: 0 20px;
+        }
+        .page-content {
+          padding: 36px 20px 60px;
+        }
+        /* Hide "Menu" text on very small screens, keep icon */
+        .nav-menu-label {
+          display: none;
+        }
+      }
+    </style>
   </head>
+
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#navbar"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbar">
-        <div class="navbar-nav">
-            {% if user.is_authenticated %}
-          <a class="nav-item nav-link" id="home" href="/">Home</a>
-          <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
-          <a class="nav-item nav-link" id="myProfile" href="/myProfile">My Profile</a>
-            {% else %}
-          <a class="nav-item nav-link" id="login" href="/login">Login</a>
-          <a class="nav-item nav-link" id="signUp" href="/sign-up">Sign Up</a>
-            {% endif %}
-        </div>
+
+    <nav class="site-nav" role="navigation" aria-label="Main navigation">
+
+      <!-- Left: Menu -->
+      <div class="site-nav__col">
+        <a class="nav-item-link" href="#" id="menu-toggle" aria-label="Open menu">
+          <svg viewBox="0 0 14 10" aria-hidden="true">
+            <line x1="0" y1="1"  x2="14" y2="1"/>
+            <line x1="0" y1="5"  x2="14" y2="5"/>
+            <line x1="0" y1="9"  x2="14" y2="9"/>
+          </svg>
+          <span class="nav-menu-label">Menu</span>
+        </a>
       </div>
+
+      <!-- Center: Wordmark -->
+      <div class="site-nav__col site-nav__col--center">
+        <a class="site-nav__logo" href="/">Atelier</a>
+      </div>
+
+      <!-- Right: Auth links -->
+      <div class="site-nav__col site-nav__col--right">
+        {% if user.is_authenticated %}
+          <a class="nav-item-link" href="/myProfile">Profile</a>
+          <a class="nav-item-link" href="/logout">Logout</a>
+        {% else %}
+          <a class="nav-item-link" href="/login">Login</a>
+          <a class="nav-item-link" href="/sign-up">Sign Up</a>
+        {% endif %}
+      </div>
+
     </nav>
 
+    <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
+    <div class="flash-zone">
       {% for category, message in messages %}
-      {% if category == 'error' %}
-      <div class="alert alert-danger alter-dismissable fade show" role="alert">
-        {{ message }}
-        <button type="button" class="close" data-dismiss="alert">
-          <span aria-hidden="true">&times;</span>
-        </button>
+      <div class="flash-item {% if category == 'error' %}flash-item--error{% endif %}">
+        <span>{{ message }}</span>
+        <button
+          class="flash-item__close"
+          onclick="this.parentElement.remove()"
+          aria-label="Dismiss"
+        >&times;</button>
       </div>
-      {% else %}
-      <div class="alert alert-success alter-dismissable fade show" role="alert">
-        {{ message }}
-        <button type="button" class="close" data-dismiss="alert">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      {% endif %}
       {% endfor %}
+    </div>
     {% endif %}
     {% endwith %}
 
-    <div class="container">{% block content %} {% endblock %}</div>
-    <script
-      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-      crossorigin="anonymous"
-    ></script>
+    <div class="page-content">
+      {% block content %}{% endblock %}
+    </div>
 
-    <script
-        type="text/javascript"
-        src="{{ url_for('static', filename='index.js') }}"
-    ></script>
+    <!-- jQuery + Bootstrap JS — single load -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='index.js') }}"></script>
 
-    <!-- Use these three together for Bootstrap 4 -->
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
   </body>
 </html>

@@ -1,63 +1,40 @@
 {% extends "base.html" %}
-{% block title %}{{ user.display_name or user.first_name }} — Atelier{% endblock %}
+{% block title %}{{ profile_user.display_name or profile_user.first_name }} — Atelier{% endblock %}
 
 {% block content %}
 
 {# ---- Resolve display values once ---------------------------------------- #}
-{% set shown_name    = user.display_name or user.first_name %}
-{% set has_instagram = user.instagram_handle and user.instagram_handle.strip() %}
-{% set has_email     = user.contact_email   and user.contact_email.strip() %}
-{% set has_website   = user.website_url     and user.website_url.strip() %}
-{% set has_location  = user.location        and user.location.strip() %}
+{% set shown_name    = profile_user.display_name or profile_user.first_name %}
+{% set has_instagram = profile_user.instagram_handle and profile_user.instagram_handle.strip() %}
+{% set has_email     = profile_user.contact_email   and profile_user.contact_email.strip() %}
+{% set has_website   = profile_user.website_url     and profile_user.website_url.strip() %}
+{% set has_location  = profile_user.location        and profile_user.location.strip() %}
 {% set has_any_contact = has_instagram or has_email or has_website or has_location %}
 
+{# Ensure website URL has a protocol so the href is not treated as relative #}
 {% if has_website %}
-  {% if user.website_url.startswith('http') %}
-    {% set website_href = user.website_url %}
+  {% if profile_user.website_url.startswith('http') %}
+    {% set website_href = profile_user.website_url %}
   {% else %}
-    {% set website_href = 'https://' + user.website_url %}
+    {% set website_href = 'https://' + profile_user.website_url %}
   {% endif %}
 {% endif %}
 
 <style>
   /* ---- Profile header -------------------------------------- */
   .profile-header {
-    position: relative;
     text-align: center;
-    margin-bottom: 56px;
-  }
-
-  /* Edit link — top-right of header */
-  .profile-edit-link {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-family: var(--font-sans);
-    font-size: 0.6875rem;
-    font-weight: var(--weight-normal);
-    letter-spacing: var(--tracking-widest);
-    text-transform: uppercase;
-    color: var(--color-muted);
-    border-bottom: 1px solid transparent;
-    transition: color var(--transition-base), border-color var(--transition-base);
-    white-space: nowrap;
-  }
-
-  .profile-edit-link:hover {
-    color: var(--color-text);
-    border-bottom-color: var(--color-text);
-    text-decoration: none;
+    margin-bottom: 48px;
   }
 
   .profile-name {
     font-family: var(--font-serif);
-    font-size: clamp(2.75rem, 7vw, 5rem);
+    font-size: clamp(2rem, 6vw, 3rem);
     font-weight: var(--weight-light);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--color-text);
-    line-height: 1;
-    margin-bottom: 24px;
+    line-height: 1.1;
+    margin-bottom: 20px;
   }
 
   .profile-bio {
@@ -109,6 +86,7 @@
     display: block;
   }
 
+  /* Filled dot for Instagram lens dot */
   .contact-icon .dot { fill: currentColor; stroke: none; }
 
   .contact-none {
@@ -134,7 +112,8 @@
     letter-spacing: var(--tracking-widest);
     text-transform: uppercase;
     color: var(--color-muted);
-    margin: 0;
+    text-align: center;
+    margin: 0 0 56px;
   }
 
   /* ---- Grid ------------------------------------------------ */
@@ -153,6 +132,7 @@
     .sketch-grid { grid-template-columns: 1fr; }
   }
 
+  /* ---- Sketch item ----------------------------------------- */
   .sketch-item {
     display: flex;
     flex-direction: column;
@@ -216,6 +196,7 @@
     color: #fff;
   }
 
+  /* ---- Heart ------------------------------------------- */
   .heart-icon {
     width: 16px;
     height: 16px;
@@ -229,7 +210,9 @@
 
   .heart-icon.is-liked { fill: #fff; }
 
-  .heart-icon--muted { stroke: var(--color-muted); }
+  .heart-icon--muted {
+    stroke: var(--color-muted);
+  }
 
   .heart-icon--muted.is-liked {
     fill: var(--color-text);
@@ -247,7 +230,7 @@
     color: inherit;
   }
 
-  /* ---- Delete × ------------------------------------------- */
+  /* ---- Delete × (only when viewing your own profile) ------- */
   .sketch-cell__delete {
     position: absolute;
     top: 12px;
@@ -272,7 +255,7 @@
 
   .sketch-cell__delete:hover { opacity: 1; }
 
-  /* ---- Mobile metadata row --------------------------------- */
+  /* ---- Mobile permanent metadata row ----------------------- */
   .sketch-mobile-meta {
     display: none;
     justify-content: space-between;
@@ -320,85 +303,11 @@
     max-width: none;
   }
 
-  /* ---- Confirm modal --------------------------------------- */
-  .confirm-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-
-  .confirm-modal.is-open { opacity: 1; pointer-events: auto; }
-
-  .confirm-modal__backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(10, 10, 10, 0.3);
-    cursor: pointer;
-  }
-
-  .confirm-modal__box {
-    position: relative;
-    z-index: 1;
-    background: var(--color-bg);
-    border: 1px solid var(--color-text);
-    padding: 44px 56px;
-    text-align: center;
-    min-width: 260px;
-  }
-
-  .confirm-modal__heading {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    font-weight: var(--weight-light);
-    color: var(--color-text);
-    margin-bottom: 8px;
-  }
-
-  .confirm-modal__sub {
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    color: var(--color-muted);
-    letter-spacing: 0.03em;
-    margin-bottom: 36px;
-    max-width: none;
-  }
-
-  .confirm-modal__actions {
-    display: flex;
-    justify-content: center;
-    gap: 2.5rem;
-  }
-
-  .confirm-modal__btn {
-    font-family: var(--font-sans);
-    font-size: 0.6875rem;
-    font-weight: var(--weight-normal);
-    letter-spacing: var(--tracking-widest);
-    text-transform: uppercase;
-    cursor: pointer;
-    color: var(--color-muted);
-    background: none;
-    border: none;
-    padding: 0;
-    transition: color var(--transition-base);
-  }
-
-  .confirm-modal__btn:hover { color: var(--color-text); }
-  .confirm-modal__btn--confirm { color: var(--color-text); }
-  .confirm-modal__btn--confirm:hover { color: var(--color-muted); }
-
   /* ---- Mobile overrides ------------------------------------ */
   @media (max-width: 768px) {
-    .profile-edit-link { position: static; display: block; margin-bottom: 20px; }
-    .sketch-cell__img   { opacity: 1 !important; }
-    .sketch-overlay     { display: none; }
-    .sketch-mobile-meta { display: flex; }
+    .sketch-cell__img    { opacity: 1 !important; }
+    .sketch-overlay      { display: none; }
+    .sketch-mobile-meta  { display: flex; }
   }
 </style>
 
@@ -407,12 +316,10 @@
      ================================================================ -->
 <header class="profile-header">
 
-  <a class="profile-edit-link" href="/profile/edit">Edit profile</a>
-
   <h1 class="profile-name">{{ shown_name }}</h1>
 
-  {% if user.bio and user.bio.strip() %}
-  <p class="profile-bio">{{ user.bio }}</p>
+  {% if profile_user.bio and profile_user.bio.strip() %}
+  <p class="profile-bio">{{ profile_user.bio }}</p>
   {% endif %}
 
   <!-- Contact row -->
@@ -425,12 +332,12 @@
         <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
         <circle cx="12" cy="10" r="3"/>
       </svg>
-      {{ user.location.strip() }}
+      {{ profile_user.location.strip() }}
     </span>
     {% endif %}
 
     {% if has_instagram %}
-    {% set ig_handle = user.instagram_handle.strip().lstrip('@') %}
+    {% set ig_handle = profile_user.instagram_handle.strip().lstrip('@') %}
     <a class="contact-link"
        href="https://instagram.com/{{ ig_handle }}"
        target="_blank"
@@ -447,13 +354,13 @@
 
     {% if has_email %}
     <a class="contact-link"
-       href="mailto:{{ user.contact_email.strip() }}"
-       aria-label="Email {{ user.contact_email.strip() }}">
+       href="mailto:{{ profile_user.contact_email.strip() }}"
+       aria-label="Email {{ profile_user.contact_email.strip() }}">
       <svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
         <polyline points="22,6 12,13 2,6"/>
       </svg>
-      {{ user.contact_email.strip() }}
+      {{ profile_user.contact_email.strip() }}
     </a>
     {% endif %}
 
@@ -468,7 +375,7 @@
         <line x1="2" y1="12" x2="22" y2="12"/>
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
-      {{ user.website_url.strip() }}
+      {{ profile_user.website_url.strip() }}
     </a>
     {% endif %}
 
@@ -480,8 +387,8 @@
   <div class="profile-divider"></div>
 
   <p class="profile-stats">
-    {{ current_user_sketches|length }}
-    sketch{% if current_user_sketches|length != 1 %}es{% endif %}
+    {{ sketches|length }}
+    sketch{% if sketches|length != 1 %}es{% endif %}
     &nbsp;&middot;&nbsp;
     {{ total_likes }}
     like{% if total_likes != 1 %}s{% endif %} received
@@ -492,9 +399,9 @@
 <!-- ================================================================
      Sketch grid
      ================================================================ -->
-{% if current_user_sketches %}
+{% if sketches %}
 <div class="sketch-grid">
-  {% for note in current_user_sketches %}
+  {% for note in sketches %}
   {% set is_liked = current_user.id in note.likes|map(attribute='user_id') %}
   <div class="sketch-item">
 
@@ -502,10 +409,11 @@
       <img
         class="sketch-cell__img"
         src="{{ url_for('static', filename='uploads/' + note.image_path) }}"
-        alt="Sketch"
+        alt="Sketch by {{ shown_name }}"
         loading="lazy"
       />
 
+      <!-- Hover overlay -->
       <div class="sketch-overlay">
         <span class="sketch-overlay__author">{{ shown_name }}</span>
         <div class="sketch-overlay__likes">
@@ -522,13 +430,16 @@
         </div>
       </div>
 
+      {% if note.user_id == current_user.id %}
       <button
         class="sketch-cell__delete"
-        onclick="openDeleteModal({{ note.id }})"
+        onclick="deleteNote({{ note.id }})"
         aria-label="Delete this sketch"
       ><i class="fas fa-times"></i></button>
+      {% endif %}
     </div>
 
+    <!-- Mobile permanent row -->
     <div class="sketch-mobile-meta">
       <span class="mobile-meta__author">by {{ shown_name }}</span>
       <div class="mobile-meta__likes">
@@ -551,46 +462,8 @@
 
 {% else %}
 <div class="empty-state">
-  <p class="empty-state__text">You haven't uploaded any sketches yet.</p>
-  <a href="/" class="btn-atelier">Upload your first sketch</a>
+  <p class="empty-state__text">{{ shown_name }} hasn't uploaded any sketches yet.</p>
 </div>
 {% endif %}
 
-<!-- Confirm delete modal -->
-<div class="confirm-modal" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
-  <div class="confirm-modal__backdrop" onclick="closeDeleteModal()"></div>
-  <div class="confirm-modal__box">
-    <p class="confirm-modal__heading" id="modal-heading">Delete sketch?</p>
-    <p class="confirm-modal__sub">This cannot be undone.</p>
-    <div class="confirm-modal__actions">
-      <button class="confirm-modal__btn" onclick="closeDeleteModal()">Cancel</button>
-      <button class="confirm-modal__btn confirm-modal__btn--confirm" id="modal-confirm-btn">Delete</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  let pendingDeleteId = null;
-
-  function openDeleteModal(noteId) {
-    pendingDeleteId = noteId;
-    document.getElementById('delete-modal').classList.add('is-open');
-  }
-
-  function closeDeleteModal() {
-    pendingDeleteId = null;
-    document.getElementById('delete-modal').classList.remove('is-open');
-  }
-
-  document.getElementById('modal-confirm-btn').addEventListener('click', function () {
-    if (pendingDeleteId !== null) {
-      deleteNote(pendingDeleteId);
-      closeDeleteModal();
-    }
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeDeleteModal();
-  });
-</script>
 {% endblock %}

@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile — Atelier{% endblock %}
+
+{% block content %}
+<style>
+  /* ---- Page shell ------------------------------------------ */
+  .auth-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 24px 120px;
+  }
+
+  .auth-title {
+    font-family: var(--font-serif);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: var(--weight-light);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text);
+    margin-bottom: 56px;
+    line-height: 1;
+  }
+
+  .auth-form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  /* ---- Field ----------------------------------------------- */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field__label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--font-sans);
+    font-size: 0.625rem;
+    font-weight: var(--weight-normal);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .field__counter {
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-muted);
+    transition: color var(--transition-base);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .field__counter--warn {
+    color: var(--color-text);
+  }
+
+  /* Shared input + textarea base */
+  .field__input,
+  .field__textarea {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--color-text);
+    border-radius: 0;
+    padding: 8px 0;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: var(--weight-light);
+    color: var(--color-text);
+    transition: border-color var(--transition-base);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .field__input::placeholder,
+  .field__textarea::placeholder {
+    color: transparent;
+  }
+
+  .field__input:focus,
+  .field__textarea:focus {
+    outline: none;
+  }
+
+  /* Textarea specifics */
+  .field__textarea {
+    resize: none;
+    height: 88px;
+    line-height: 1.6;
+    overflow-y: auto;
+  }
+
+  /* ---- Instagram field with @ prefix ----------------------- */
+  .field__input-row {
+    display: flex;
+    align-items: baseline;
+    border-bottom: 1px solid var(--color-text);
+    gap: 0;
+  }
+
+  .field__prefix {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: var(--weight-light);
+    color: var(--color-muted);
+    padding-bottom: 8px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  /* Input inside the prefixed row — no border of its own */
+  .field__input--inline {
+    border-bottom: none;
+    padding-left: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .field__input--inline:focus {
+    outline: none;
+  }
+
+  /* ---- Form actions ---------------------------------------- */
+  .auth-actions {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 8px;
+  }
+
+  .auth-submit {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: var(--weight-normal);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-text);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--transition-base);
+  }
+
+  .auth-submit:hover {
+    border-bottom-color: var(--color-text);
+  }
+
+  .auth-cancel {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: var(--weight-normal);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-muted);
+    border-bottom: 1px solid transparent;
+    transition: color var(--transition-base), border-color var(--transition-base);
+  }
+
+  .auth-cancel:hover {
+    color: var(--color-text);
+    border-bottom-color: var(--color-text);
+    text-decoration: none;
+  }
+</style>
+
+<div class="auth-page">
+  <h1 class="auth-title">Edit Profile</h1>
+
+  <form class="auth-form" method="POST">
+
+    <div class="field">
+      <label class="field__label" for="display_name">Display Name</label>
+      <input
+        class="field__input"
+        type="text"
+        id="display_name"
+        name="display_name"
+        placeholder="display_name"
+        value="{{ user.display_name or '' }}"
+        autocomplete="nickname"
+      />
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="bio">
+        Bio
+        <span class="field__counter" id="bio-counter">{{ 280 - (user.bio or '')|length }}</span>
+      </label>
+      <textarea
+        class="field__textarea"
+        id="bio"
+        name="bio"
+        maxlength="280"
+        placeholder="bio"
+      >{{ user.bio or '' }}</textarea>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="location">Location</label>
+      <input
+        class="field__input"
+        type="text"
+        id="location"
+        name="location"
+        placeholder="location"
+        value="{{ user.location or '' }}"
+      />
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="contact_email">Contact Email</label>
+      <input
+        class="field__input"
+        type="email"
+        id="contact_email"
+        name="contact_email"
+        placeholder="contact_email"
+        value="{{ user.contact_email or '' }}"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="instagram_handle">Instagram</label>
+      <div class="field__input-row">
+        <span class="field__prefix">@</span>
+        <input
+          class="field__input field__input--inline"
+          type="text"
+          id="instagram_handle"
+          name="instagram_handle"
+          placeholder="handle"
+          value="{{ user.instagram_handle or '' }}"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="website_url">Website</label>
+      <input
+        class="field__input"
+        type="text"
+        id="website_url"
+        name="website_url"
+        placeholder="website_url"
+        value="{{ user.website_url or '' }}"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="auth-actions">
+      <button type="submit" class="auth-submit">Save</button>
+      <a class="auth-cancel" href="/myProfile">Cancel</a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  (function () {
+    const bio     = document.getElementById('bio');
+    const counter = document.getElementById('bio-counter');
+    const LIMIT   = 280;
+
+    function update() {
+      const remaining = LIMIT - bio.value.length;
+      counter.textContent = remaining;
+      counter.classList.toggle('field__counter--warn', remaining < 20);
+    }
+
+    bio.addEventListener('input', update);
+    update(); // sync on page load (pre-filled value)
+  })();
+</script>
+{% endblock %}

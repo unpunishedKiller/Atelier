@@ -17,6 +17,14 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(120))
     notes = db.relationship('Sketch', backref='user')
 
+    # Optional profile fields — all nullable, default empty string
+    display_name     = db.Column(db.String(120),  nullable=True, default='')
+    bio              = db.Column(db.String(280),   nullable=True, default='')
+    location         = db.Column(db.String(120),   nullable=True, default='')
+    contact_email    = db.Column(db.String(120),   nullable=True, default='')
+    instagram_handle = db.Column(db.String(60),    nullable=True, default='')
+    website_url      = db.Column(db.String(300),   nullable=True, default='')
+
 class Like(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
